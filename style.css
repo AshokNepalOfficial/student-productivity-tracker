@@ -89,12 +89,48 @@ body {
     z-index: 0;
 }
 
-.task-check {
+/* Custom Checkbox for Routines */
+.routine-check {
     appearance: none;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     border: 2px solid var(--border);
     border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+}
+
+.routine-check:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.routine-check:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 6px;
+    height: 11px;
+    border: solid var(--bg-primary);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.routine-check:hover {
+    border-color: var(--accent);
+}
+
+/* Task Check */
+.task-check {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
     cursor: pointer;
     position: relative;
     transition: all 0.2s ease;
@@ -109,18 +145,13 @@ body {
 .task-check:checked::after {
     content: '';
     position: absolute;
-    left: 6px;
-    top: 2px;
-    width: 6px;
-    height: 12px;
+    left: 4px;
+    top: 0px;
+    width: 5px;
+    height: 9px;
     border: solid var(--bg-primary);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
-}
-
-.task-check:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
 }
 
 input[type="text"], input[type="date"], input[type="time"], input[type="number"], select, textarea {
@@ -130,7 +161,7 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
     transition: all 0.2s ease;
 }
 
-input[type="text"]:focus, input[type="date"]:focus, input[type="time"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+input:focus, select:focus {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(0, 229, 160, 0.1);
@@ -147,8 +178,6 @@ input[type="text"]:focus, input[type="date"]:focus, input[type="time"]:focus, in
     transform: translateY(-1px);
     box-shadow: 0 4px 20px rgba(0, 229, 160, 0.3);
 }
-
-.btn-primary:active { transform: translateY(0); }
 
 .btn-ghost {
     background: transparent;
@@ -174,8 +203,8 @@ input[type="text"]:focus, input[type="date"]:focus, input[type="time"]:focus, in
 }
 
 .tag {
-    font-size: 10px;
-    padding: 2px 8px;
+    font-size: 9px;
+    padding: 2px 6px;
     border-radius: 4px;
     font-weight: 600;
     text-transform: uppercase;
@@ -188,6 +217,7 @@ input[type="text"]:focus, input[type="date"]:focus, input[type="time"]:focus, in
 .tag-exercise { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
 .tag-meal { background: rgba(244, 63, 94, 0.2); color: #f43f5e; }
 .tag-other { background: rgba(168, 162, 158, 0.2); color: #a8a29e; }
+.tag-completed { background: rgba(0, 229, 160, 0.2); color: #00e5a0; }
 
 .routine-class { border-left: 3px solid #4da6ff; }
 .routine-study { border-left: 3px solid #00e5a0; }
@@ -212,23 +242,12 @@ input[type="text"]:focus, input[type="date"]:focus, input[type="time"]:focus, in
     cursor: pointer;
 }
 
-.day-btn:hover {
-    border-color: var(--fg-muted);
-    color: var(--fg-primary);
-}
-
 .day-btn.active {
     background: var(--accent);
     color: var(--bg-primary);
     border-color: var(--accent);
 }
 
-.day-btn.today {
-    border-color: var(--accent);
-    color: var(--accent);
-}
-
-/* Timer Preset Pills */
 .timer-preset-btn {
     padding: 6px 14px;
     border-radius: 20px;
@@ -242,14 +261,22 @@ input[type="text"]:focus, input[type="date"]:focus, input[type="time"]:focus, in
     cursor: pointer;
 }
 
-.timer-preset-btn:hover {
-    border-color: var(--fg-muted);
-    color: var(--fg-primary);
-}
-
 .timer-preset-btn.active {
     background: var(--accent);
     color: var(--bg-primary);
     border-color: var(--accent);
     font-weight: 600;
+}
+
+/* Progress Bar for Report */
+.progress-bar-bg {
+    background: var(--bg-primary);
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+}
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
 }

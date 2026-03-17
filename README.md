@@ -90,3 +90,12 @@ This is a daily evolving project where I build a productivity tracker.
 - Clean modal interface for managing timers
 - Visual feedback on active selection
 - Timer label updates based on selected preset
+
+**Routine Completion Tracking:** 
+- Checkboxes for each routine instance (per day) that save to a log.
+
+**Task Correlation:**
+- Automatically detecting and displaying tasks completed during a specific routine's time window.
+
+**Progress Report Modal:**
+- A dedicated view showing weekly completion rates, most productive times, and task statistics.
