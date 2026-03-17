@@ -1,16 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Productivity Tracker</title>
-  <link rel="stylesheet" href="style.css">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>My Productivity Tracker</h1>
 
-  <input type="text" id="taskInput" placeholder="Enter your task">
-  <button onclick="addTask()">Add Task</button>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
 
-  <ul id="taskList"></ul>
+  <div class="bg-white p-6 rounded-2xl shadow-lg w-96">
+    <h1 class="text-2xl font-bold text-center mb-4">
+      Productivity Tracker
+    </h1>
+
+    <div class="flex gap-2">
+      <input 
+        id="taskInput"
+        type="text" 
+        placeholder="Enter your task"
+        class="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+      >
+      <button 
+        onclick="addTask()"
+        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+      >
+        Add
+      </button>
+    </div>
+
+    <ul id="taskList" class="mt-4 space-y-2"></ul>
+  </div>
 
   <script src="script.js"></script>
 </body>
