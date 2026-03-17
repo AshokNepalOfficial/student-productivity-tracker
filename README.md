@@ -66,3 +66,27 @@ This is a daily evolving project where I build a productivity tracker.
 - Works beautifully from mobile (375px) to desktop (1440px+)
 - Collapsible sections on smaller screens
 - Touch-friendly controls
+
+**Multiple Timer Presets:**
+- **Pomodoro (25 min)** - Classic focus session
+- **Short Break (5 min)** - Quick rest between sessions
+- **Long Break (15 min)** - Extended recovery time
+- **Deep Work (50 min)** - Longer concentration blocks
+
+**Custom Timer Management:**
+- Click the **settings icon** (slider icon) on the timer card to open the management modal
+- **Add Custom Timers** - Create your own with custom labels (1-180 minutes)
+- **Delete Custom Timers** - Remove any user-created timer (default presets are protected)
+- All presets saved to localStorage
+
+**Smart Behavior:**
+- Switching presets automatically resets the timer
+- Active timer is highlighted in the modal
+- Progress ring dynamically adjusts to selected duration
+- State persists across page refreshes
+
+**UI/UX:**
+- Horizontal scrollable pill buttons for quick preset switching
+- Clean modal interface for managing timers
+- Visual feedback on active selection
+- Timer label updates based on selected preset

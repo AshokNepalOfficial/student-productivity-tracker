@@ -1,456 +1,518 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FocusFlow - Student Productivity</title>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Vue.js -->
-  <script src="https://unpkg.com/vue@3"></script>
-  
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            display: ['Space Grotesk', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace']
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusFlow - Student Productivity</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Vue.js -->
+    <script src="https://unpkg.com/vue@3"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Space Grotesk', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
         }
-      }
-    }
-  </script>
-  
-<link rel="stylesheet" href="style.css">
+    </script>
+
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="bg-grid overflow-x-hidden">
-  <!-- Background glows -->
-  <div class="bg-glow" style="background: var(--accent); top: -200px; right: -200px;"></div>
-  <div class="bg-glow" style="background: #6366f1; bottom: -300px; left: -200px;"></div>
-  
-  <div id="app" class="relative z-10 min-h-screen">
-    <!-- Header -->
-    <header class="border-b border-[--border] bg-[--bg-secondary]/80 backdrop-blur-md sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[--accent] to-[--accent-dim] flex items-center justify-center">
-            <svg class="w-5 h-5 text-[--bg-primary]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-          </div>
-          <div>
-            <h1 class="font-display font-bold text-xl tracking-tight">FocusFlow</h1>
-            <p class="text-xs text-[--fg-muted]">Student Productivity</p>
-          </div>
-        </div>
-        
-        <div class="flex items-center gap-4">
-          <!-- Current Activity Badge -->
-          <div v-if="currentActivity" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[--accent]/10 border border-[--accent]/30">
-            <span class="w-2 h-2 rounded-full bg-[--accent] animate-blink"></span>
-            <span class="text-sm text-[--accent] font-medium">{{ currentActivity.title }}</span>
-          </div>
-          
-          <div class="text-right">
-            <p class="text-sm font-medium">{{ currentDate }}</p>
-            <p class="text-xs text-[--fg-muted]">{{ currentTime }}</p>
-          </div>
-        </div>
-      </div>
-    </header>
-    
-    <!-- Main content -->
-    <main class="max-w-7xl mx-auto px-4 py-6">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        <!-- Left sidebar: Stats & Timer -->
-        <div class="lg:col-span-3 space-y-6">
-          
-          <!-- Quick Stats -->
-          <div class="stat-card rounded-2xl p-5 animate-fade-in-up">
-            <h3 class="text-sm font-medium text-[--fg-secondary] mb-4">Today's Progress</h3>
-            
-            <div class="space-y-4">
-              <div>
-                <div class="flex justify-between text-sm mb-2">
-                  <span class="text-[--fg-muted]">Tasks</span>
-                  <span class="font-mono">{{ completedToday }}/{{ totalToday }}</span>
-                </div>
-                <div class="h-2 bg-[--bg-primary] rounded-full overflow-hidden">
-                  <div 
-                    class="h-full bg-gradient-to-r from-[--accent] to-[--accent-dim] rounded-full transition-all duration-500"
-                    :style="{ width: progressPercent + '%' }"
-                  ></div>
-                </div>
-              </div>
-              
-              <div>
-                <div class="flex justify-between text-sm mb-2">
-                  <span class="text-[--fg-muted]">Routine</span>
-                  <span class="font-mono">{{ completedRoutine }}/{{ totalRoutine }}</span>
-                </div>
-                <div class="h-2 bg-[--bg-primary] rounded-full overflow-hidden">
-                  <div 
-                    class="h-full bg-gradient-to-r from-[--info] to-[--purple] rounded-full transition-all duration-500"
-                    :style="{ width: routineProgress + '%' }"
-                  ></div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-3 mt-5">
-              <div class="text-center p-3 bg-[--bg-secondary] rounded-xl">
-                <p class="text-2xl font-bold font-mono">{{ activeTasks }}</p>
-                <p class="text-xs text-[--fg-muted]">Active Tasks</p>
-              </div>
-              <div class="text-center p-3 bg-[--bg-secondary] rounded-xl">
-                <p class="text-2xl font-bold font-mono text-[--warning]">{{ streak }}</p>
-                <p class="text-xs text-[--fg-muted]">Day Streak</p>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Focus Timer -->
-          <div class="stat-card rounded-2xl p-5 animate-fade-in-up" style="animation-delay: 0.1s;">
-            <h3 class="text-sm font-medium text-[--fg-secondary] mb-4">Focus Timer</h3>
-            
-            <div class="flex justify-center mb-4">
-              <div class="relative">
-                <svg class="w-32 h-32 transform -rotate-90">
-                  <circle cx="64" cy="64" r="56" stroke="var(--border)" stroke-width="6" fill="none"/>
-                  <circle 
-                    cx="64" cy="64" r="56" 
-                    stroke="var(--accent)" 
-                    stroke-width="6" 
-                    fill="none"
-                    :stroke-dasharray="352"
-                    :stroke-dashoffset="timerProgress"
-                    stroke-linecap="round"
-                    class="transition-all duration-1000"
-                  />
-                </svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                  <span class="text-2xl font-bold font-mono">{{ timerDisplay }}</span>
-                  <span class="text-xs text-[--fg-muted]">{{ timerRunning ? 'Focusing' : 'Pomodoro' }}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="flex justify-center gap-2">
-              <button @click="toggleTimer" class="btn-primary px-5 py-2 rounded-xl flex items-center gap-2" :class="{ 'animate-pulse-glow': timerRunning }">
-                <svg v-if="!timerRunning" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                <svg v-else class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                {{ timerRunning ? 'Pause' : 'Start' }}
-              </button>
-              <button @click="resetTimer" class="btn-ghost px-3 py-2 rounded-xl" aria-label="Reset timer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Main content area -->
-        <div class="lg:col-span-9 space-y-6">
-          
-          <!-- Day selector -->
-          <div class="flex items-center justify-between animate-fade-in-up">
-            <div class="flex items-center gap-2">
-              <button 
-                v-for="(day, index) in weekDays" 
-                :key="index"
-                @click="selectedDay = index"
-                class="day-btn"
-                :class="{ 
-                  'active': selectedDay === index, 
-                  'today': index === currentDayIndex 
-                }"
-              >
-                {{ day.short }}
-              </button>
-            </div>
-            
-            <div class="flex gap-2">
-              <button 
-                @click="showRoutineModal = true"
-                class="btn-primary px-4 py-2 rounded-xl text-sm flex items-center gap-2"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                </svg>
-                Add Routine
-              </button>
-            </div>
-          </div>
-          
-          <!-- Content tabs -->
-          <div class="flex gap-2 border-b border-[--border] pb-2 animate-fade-in-up" style="animation-delay: 0.05s;">
-            <button 
-              @click="activeTab = 'schedule'"
-              class="px-4 py-2 text-sm font-medium transition-all rounded-lg"
-              :class="activeTab === 'schedule' ? 'bg-[--accent]/10 text-[--accent]' : 'text-[--fg-muted] hover:text-[--fg-primary]'"
-            >
-              Today's Schedule
-            </button>
-            <button 
-              @click="activeTab = 'tasks'"
-              class="px-4 py-2 text-sm font-medium transition-all rounded-lg"
-              :class="activeTab === 'tasks' ? 'bg-[--accent]/10 text-[--accent]' : 'text-[--fg-muted] hover:text-[--fg-primary]'"
-            >
-              Tasks
-            </button>
-          </div>
-          
-          <!-- Schedule View -->
-          <div v-if="activeTab === 'schedule'" class="space-y-4">
-            <!-- Current activity banner -->
-            <div v-if="currentActivity && selectedDay === currentDayIndex" class="stat-card rounded-xl p-4 border-l-4 border-[--accent] bg-gradient-to-r from-[--accent]/10 to-transparent">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-xs text-[--accent] font-medium uppercase tracking-wider">Currently</p>
-                  <p class="text-lg font-semibold mt-1">{{ currentActivity.title }}</p>
-                  <p class="text-sm text-[--fg-muted]">{{ currentActivity.startTime }} - {{ currentActivity.endTime }}</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-sm text-[--fg-muted]">Time remaining</p>
-                  <p class="text-xl font-bold font-mono text-[--accent]">{{ timeRemaining }}</p>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Timeline -->
-            <div class="stat-card rounded-2xl p-5">
-              <h3 class="text-sm font-medium text-[--fg-secondary] mb-4">
-                {{ weekDays[selectedDay].full }} Schedule
-              </h3>
-              
-              <div v-if="dayRoutines.length === 0" class="text-center py-12">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[--bg-secondary] flex items-center justify-center">
-                  <svg class="w-8 h-8 text-[--fg-muted]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                  </svg>
-                </div>
-                <p class="text-[--fg-muted]">No routines scheduled for {{ weekDays[selectedDay].full }}</p>
-                <button @click="showRoutineModal = true" class="mt-3 text-sm text-[--accent] hover:underline">
-                  Add your first routine
-                </button>
-              </div>
-              
-              <div v-else class="space-y-3 stagger-children">
-                <div 
-                  v-for="routine in dayRoutines" 
-                  :key="routine.id"
-                  class="group relative flex items-start gap-4 p-3 rounded-xl transition-all hover:bg-[--bg-secondary]/50"
-                  :class="[
-                    'routine-' + routine.type,
-                    isRoutineCurrent(routine) ? 'bg-[--accent]/5 ring-1 ring-[--accent]/30' : '',
-                    isRoutineCompleted(routine) ? 'opacity-50' : ''
-                  ]"
-                >
-                  <!-- Time column -->
-                  <div class="w-16 text-right flex-shrink-0">
-                    <p class="text-sm font-mono font-medium">{{ routine.startTime }}</p>
-                    <p class="text-xs text-[--fg-muted]">{{ routine.endTime }}</p>
-                  </div>
-                  
-                  <!-- Content -->
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2">
-                      <span class="tag tag-{{ routine.type }}">{{ routine.type }}</span>
-                      <span v-if="isRoutineCurrent(routine)" class="w-2 h-2 rounded-full bg-[--accent] animate-blink"></span>
+    <!-- Background glows -->
+    <div class="bg-glow" style="background: var(--accent); top: -200px; right: -200px;"></div>
+    <div class="bg-glow" style="background: #6366f1; bottom: -300px; left: -200px;"></div>
+
+    <div id="app" class="relative z-10 min-h-screen">
+        <!-- Header -->
+        <header class="border-b border-[--border] bg-[--bg-secondary]/80 backdrop-blur-md sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-[--accent] to-[--accent-dim] flex items-center justify-center">
+                        <svg class="w-5 h-5 text-[--bg-primary]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
                     </div>
-                    <p class="font-medium mt-1">{{ routine.title }}</p>
-                    <p v-if="routine.location" class="text-xs text-[--fg-muted] mt-1">
-                      <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                      </svg>
-                      {{ routine.location }}
-                    </p>
-                  </div>
-                  
-                  <!-- Duration -->
-                  <div class="text-right">
-                    <p class="text-xs text-[--fg-muted]">{{ calculateDuration(routine.startTime, routine.endTime) }}</p>
-                  </div>
-                  
-                  <!-- Actions -->
-                  <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button @click="editRoutine(routine)" class="p-1.5 rounded-lg hover:bg-[--bg-card]" aria-label="Edit">
-                      <svg class="w-4 h-4 text-[--fg-muted]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                      </svg>
+                    <div>
+                        <h1 class="font-display font-bold text-xl tracking-tight">FocusFlow</h1>
+                        <p class="text-xs text-[--fg-muted]">Student Productivity</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div v-if="currentActivity"
+                        class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[--accent]/10 border border-[--accent]/30">
+                        <span class="w-2 h-2 rounded-full bg-[--accent] animate-blink"></span>
+                        <span class="text-sm text-[--accent] font-medium">{{ currentActivity.title }}</span>
+                    </div>
+
+                    <div class="text-right">
+                        <p class="text-sm font-medium">{{ currentDate }}</p>
+                        <p class="text-xs text-[--fg-muted]">{{ currentTime }}</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main content -->
+        <main class="max-w-7xl mx-auto px-4 py-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Left sidebar -->
+                <div class="lg:col-span-3 space-y-6">
+
+                    <!-- Quick Stats -->
+                    <div class="stat-card rounded-2xl p-5 animate-fade-in-up">
+                        <h3 class="text-sm font-medium text-[--fg-secondary] mb-4">Today's Progress</h3>
+
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-[--fg-muted]">Tasks</span>
+                                    <span class="font-mono">{{ completedToday }}/{{ totalToday }}</span>
+                                </div>
+                                <div class="h-2 bg-[--bg-primary] rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-[--accent] to-[--accent-dim] rounded-full transition-all duration-500"
+                                        :style="{ width: progressPercent + '%' }"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-[--fg-muted]">Routine</span>
+                                    <span class="font-mono">{{ completedRoutine }}/{{ totalRoutine }}</span>
+                                </div>
+                                <div class="h-2 bg-[--bg-primary] rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-[--info] to-[--purple] rounded-full transition-all duration-500"
+                                        :style="{ width: routineProgress + '%' }"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mt-5">
+                            <div class="text-center p-3 bg-[--bg-secondary] rounded-xl">
+                                <p class="text-2xl font-bold font-mono">{{ activeTasks }}</p>
+                                <p class="text-xs text-[--fg-muted]">Active</p>
+                            </div>
+                            <div class="text-center p-3 bg-[--bg-secondary] rounded-xl">
+                                <p class="text-2xl font-bold font-mono text-[--warning]">{{ streak }}</p>
+                                <p class="text-xs text-[--fg-muted]">Streak</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Focus Timer -->
+                    <div class="stat-card rounded-2xl p-5 animate-fade-in-up" style="animation-delay: 0.1s;">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-medium text-[--fg-secondary]">Focus Timer</h3>
+                            <button @click="showTimerModal = true"
+                                class="p-1.5 rounded-lg hover:bg-[--bg-secondary] transition-colors"
+                                aria-label="Manage timers">
+                                <svg class="w-4 h-4 text-[--fg-muted]" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Timer Presets -->
+                        <div class="flex gap-2 overflow-x-auto pb-3 mb-4 -mx-1 px-1">
+                            <button v-for="preset in timerPresets" :key="preset.id" @click="selectTimerPreset(preset)"
+                                class="timer-preset-btn" :class="{ 'active': activeTimerId === preset.id }">
+                                {{ preset.label }}
+                            </button>
+                        </div>
+
+                        <!-- Timer Circle -->
+                        <div class="flex justify-center mb-4">
+                            <div class="relative">
+                                <svg class="w-32 h-32 transform -rotate-90">
+                                    <circle cx="64" cy="64" r="56" stroke="var(--border)" stroke-width="6"
+                                        fill="none" />
+                                    <circle cx="64" cy="64" r="56" stroke="var(--accent)" stroke-width="6" fill="none"
+                                        :stroke-dasharray="352" :stroke-dashoffset="timerProgress"
+                                        stroke-linecap="round" class="transition-all duration-1000" />
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-2xl font-bold font-mono">{{ timerDisplay }}</span>
+                                    <span class="text-xs text-[--fg-muted]">{{ timerRunning ? 'Focusing' :
+                                        activeTimerLabel }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center gap-2">
+                            <button @click="toggleTimer"
+                                class="btn-primary px-5 py-2 rounded-xl flex items-center gap-2"
+                                :class="{ 'animate-pulse-glow': timerRunning }">
+                                <svg v-if="!timerRunning" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                                <svg v-else class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                                </svg>
+                                {{ timerRunning ? 'Pause' : 'Start' }}
+                            </button>
+                            <button @click="resetTimer" class="btn-ghost px-3 py-2 rounded-xl" aria-label="Reset timer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main content area -->
+                <div class="lg:col-span-9 space-y-6">
+
+                    <!-- Day selector -->
+                    <div class="flex items-center justify-between animate-fade-in-up overflow-x-auto">
+                        <div class="flex items-center gap-2">
+                            <button v-for="(day, index) in weekDays" :key="index" @click="selectedDay = index"
+                                class="day-btn"
+                                :class="{ 'active': selectedDay === index, 'today': index === currentDayIndex }">
+                                {{ day.short }}
+                            </button>
+                        </div>
+
+                        <button @click="showRoutineModal = true"
+                            class="btn-primary px-4 py-2 rounded-xl text-sm flex items-center gap-2 ml-4 flex-shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Add Routine
+                        </button>
+                    </div>
+
+                    <!-- Content tabs -->
+                    <div class="flex gap-2 border-b border-[--border] pb-2 animate-fade-in-up"
+                        style="animation-delay: 0.05s;">
+                        <button @click="activeTab = 'schedule'"
+                            class="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                            :class="activeTab === 'schedule' ? 'bg-[--accent]/10 text-[--accent]' : 'text-[--fg-muted] hover:text-[--fg-primary]'">
+                            Today's Schedule
+                        </button>
+                        <button @click="activeTab = 'tasks'"
+                            class="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                            :class="activeTab === 'tasks' ? 'bg-[--accent]/10 text-[--accent]' : 'text-[--fg-muted] hover:text-[--fg-primary]'">
+                            Tasks
+                        </button>
+                    </div>
+
+                    <!-- Schedule View -->
+                    <div v-if="activeTab === 'schedule'" class="space-y-4">
+                        <div v-if="currentActivity && selectedDay === currentDayIndex"
+                            class="stat-card rounded-xl p-4 border-l-4 border-[--accent] bg-gradient-to-r from-[--accent]/10 to-transparent">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-[--accent] font-medium uppercase tracking-wider">Currently
+                                    </p>
+                                    <p class="text-lg font-semibold mt-1">{{ currentActivity.title }}</p>
+                                    <p class="text-sm text-[--fg-muted]">{{ currentActivity.startTime }} - {{
+                                        currentActivity.endTime }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-[--fg-muted]">Time remaining</p>
+                                    <p class="text-xl font-bold font-mono text-[--accent]">{{ timeRemaining }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card rounded-2xl p-5">
+                            <h3 class="text-sm font-medium text-[--fg-secondary] mb-4">{{ weekDays[selectedDay].full }}
+                                Schedule</h3>
+
+                            <div v-if="dayRoutines.length === 0" class="text-center py-12">
+                                <div
+                                    class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[--bg-secondary] flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-[--fg-muted]" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <p class="text-[--fg-muted]">No routines scheduled for {{ weekDays[selectedDay].full }}
+                                </p>
+                                <button @click="showRoutineModal = true"
+                                    class="mt-3 text-sm text-[--accent] hover:underline">Add your first routine</button>
+                            </div>
+
+                            <div v-else class="space-y-3 stagger-children">
+                                <div v-for="routine in dayRoutines" :key="routine.id"
+                                    class="group relative flex items-start gap-4 p-3 rounded-xl transition-all hover:bg-[--bg-secondary]/50"
+                                    :class="['routine-' + routine.type, isRoutineCurrent(routine) ? 'bg-[--accent]/5 ring-1 ring-[--accent]/30' : '', isRoutineCompleted(routine) ? 'opacity-50' : '']">
+                                    <div class="w-16 text-right flex-shrink-0">
+                                        <p class="text-sm font-mono font-medium">{{ routine.startTime }}</p>
+                                        <p class="text-xs text-[--fg-muted]">{{ routine.endTime }}</p>
+                                    </div>
+
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <span class="tag tag-{{ routine.type }}">{{ routine.type }}</span>
+                                            <span v-if="isRoutineCurrent(routine)"
+                                                class="w-2 h-2 rounded-full bg-[--accent] animate-blink"></span>
+                                        </div>
+                                        <p class="font-medium mt-1">{{ routine.title }}</p>
+                                        <p v-if="routine.location" class="text-xs text-[--fg-muted] mt-1">
+                                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            </svg>
+                                            {{ routine.location }}
+                                        </p>
+                                    </div>
+
+                                    <div class="text-right">
+                                        <p class="text-xs text-[--fg-muted]">{{ calculateDuration(routine.startTime,
+                                            routine.endTime) }}</p>
+                                    </div>
+
+                                    <div
+                                        class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button @click="editRoutine(routine)"
+                                            class="p-1.5 rounded-lg hover:bg-[--bg-card]" aria-label="Edit">
+                                            <svg class="w-4 h-4 text-[--fg-muted]" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                        <button @click="deleteRoutine(routine.id)"
+                                            class="p-1.5 rounded-lg hover:bg-[--danger]/10" aria-label="Delete">
+                                            <svg class="w-4 h-4 text-[--danger]" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tasks View -->
+                    <div v-if="activeTab === 'tasks'" class="space-y-4">
+                        <div class="stat-card rounded-xl p-4 animate-fade-in-up">
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <div class="flex-1">
+                                    <input v-model="newTask.title" @keyup.enter="addTask" type="text"
+                                        placeholder="What do you need to accomplish?"
+                                        class="w-full px-4 py-2.5 rounded-xl text-sm">
+                                </div>
+                                <div class="flex gap-2">
+                                    <select v-model="newTask.category" class="px-3 py-2.5 rounded-xl text-sm">
+                                        <option value="study">Study</option>
+                                        <option value="assignment">Assignment</option>
+                                        <option value="exam">Exam</option>
+                                        <option value="project">Project</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <select v-model="newTask.priority" class="px-3 py-2.5 rounded-xl text-sm">
+                                        <option value="high">High</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="low">Low</option>
+                                    </select>
+                                    <button @click="addTask" class="btn-primary px-4 py-2.5 rounded-xl">Add</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 animate-fade-in-up" style="animation-delay: 0.05s;">
+                            <button @click="filter = 'all'" class="px-3 py-1.5 rounded-lg text-sm transition-all"
+                                :class="filter === 'all' ? 'bg-[--accent] text-[--bg-primary]' : 'btn-ghost'">All</button>
+                            <button @click="filter = 'active'" class="px-3 py-1.5 rounded-lg text-sm transition-all"
+                                :class="filter === 'active' ? 'bg-[--accent] text-[--bg-primary]' : 'btn-ghost'">Active</button>
+                            <button @click="filter = 'completed'" class="px-3 py-1.5 rounded-lg text-sm transition-all"
+                                :class="filter === 'completed' ? 'bg-[--accent] text-[--bg-primary]' : 'btn-ghost'">Completed</button>
+                            <div class="flex-1"></div>
+                            <button v-if="completedCount > 0" @click="clearCompleted"
+                                class="text-sm text-[--fg-muted] hover:text-[--danger]">Clear completed</button>
+                        </div>
+
+                        <div class="space-y-2 stagger-children">
+                            <div v-for="task in filteredTasks" :key="task.id"
+                                class="group stat-card rounded-xl p-3 flex items-center gap-3 transition-all hover:border-[--fg-muted]"
+                                :class="task.completed ? 'opacity-60' : ''">
+                                <input type="checkbox" :checked="task.completed" @change="toggleTask(task.id)"
+                                    class="task-check">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm" :class="task.completed ? 'line-through text-[--fg-muted]' : ''">
+                                        {{ task.title }}</p>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="tag tag-{{ task.category }}">{{ task.category }}</span>
+                                        <span v-if="task.priority === 'high'" class="text-xs text-[--danger]">High
+                                            priority</span>
+                                    </div>
+                                </div>
+                                <button @click="deleteTask(task.id)"
+                                    class="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-[--danger]/10 transition-all">
+                                    <svg class="w-4 h-4 text-[--danger]" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div v-if="filteredTasks.length === 0" class="text-center py-8 text-[--fg-muted]">No tasks
+                                found</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Routine Modal -->
+        <div v-if="showRoutineModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="modal-backdrop absolute inset-0" @click="showRoutineModal = false"></div>
+            <div
+                class="relative bg-[--bg-card] rounded-2xl p-6 w-full max-w-md border border-[--border] animate-scale-in">
+                <h3 class="text-lg font-semibold mb-5">{{ editingRoutine.id ? 'Edit Routine' : 'Add New Routine' }}</h3>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-[--fg-secondary] mb-1.5 block">Title</label>
+                        <input v-model="editingRoutine.title" type="text" placeholder="e.g., Math Class"
+                            class="w-full px-4 py-2.5 rounded-xl text-sm">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-[--fg-secondary] mb-1.5 block">Start Time</label>
+                            <input v-model="editingRoutine.startTime" type="time"
+                                class="w-full px-4 py-2.5 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs text-[--fg-secondary] mb-1.5 block">End Time</label>
+                            <input v-model="editingRoutine.endTime" type="time"
+                                class="w-full px-4 py-2.5 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-[--fg-secondary] mb-1.5 block">Type</label>
+                        <select v-model="editingRoutine.type" class="w-full px-4 py-2.5 rounded-xl text-sm">
+                            <option value="class">Class</option>
+                            <option value="study">Study Session</option>
+                            <option value="break">Break</option>
+                            <option value="exercise">Exercise</option>
+                            <option value="meal">Meal</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-[--fg-secondary] mb-1.5 block">Location (optional)</label>
+                        <input v-model="editingRoutine.location" type="text" placeholder="e.g., Room 301"
+                            class="w-full px-4 py-2.5 rounded-xl text-sm">
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-[--fg-secondary] mb-2 block">Repeat on</label>
+                        <div class="flex gap-2 flex-wrap">
+                            <button v-for="(day, index) in weekDays" :key="index" @click="toggleRoutineDay(index)"
+                                class="day-btn text-xs" :class="{ 'active': editingRoutine.days.includes(index) }">{{
+                                day.short }}</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button @click="showRoutineModal = false" class="btn-ghost px-4 py-2 rounded-xl">Cancel</button>
+                    <button @click="saveRoutine" class="btn-primary px-5 py-2 rounded-xl">Save Routine</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer Management Modal -->
+        <div v-if="showTimerModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="modal-backdrop absolute inset-0" @click="showTimerModal = false"></div>
+            <div
+                class="relative bg-[--bg-card] rounded-2xl p-6 w-full max-w-md border border-[--border] animate-scale-in">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="text-lg font-semibold">Manage Timers</h3>
+                    <button @click="showAddTimerForm = !showAddTimerForm"
+                        class="btn-ghost px-3 py-1.5 rounded-lg text-sm flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Add Custom
                     </button>
-                    <button @click="deleteRoutine(routine.id)" class="p-1.5 rounded-lg hover:bg-[--danger]/10" aria-label="Delete">
-                      <svg class="w-4 h-4 text-[--danger]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
-                    </button>
-                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Tasks View -->
-          <div v-if="activeTab === 'tasks'" class="space-y-4">
-            <!-- Add task form -->
-            <div class="stat-card rounded-xl p-4 animate-fade-in-up">
-              <div class="flex flex-col sm:flex-row gap-3">
-                <div class="flex-1">
-                  <input 
-                    v-model="newTask.title"
-                    @keyup.enter="addTask"
-                    type="text"
-                    placeholder="What do you need to accomplish?"
-                    class="w-full px-4 py-2.5 rounded-xl text-sm"
-                  >
+
+                <!-- Add New Timer Form -->
+                <div v-if="showAddTimerForm" class="mb-5 p-4 bg-[--bg-secondary] rounded-xl border border-[--border]">
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="text-xs text-[--fg-secondary] mb-1 block">Label</label>
+                            <input v-model="newTimerPreset.label" type="text" placeholder="e.g., Deep Work"
+                                class="w-full px-3 py-2 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs text-[--fg-secondary] mb-1 block">Minutes</label>
+                            <input v-model.number="newTimerPreset.minutes" type="number" min="1" max="180"
+                                class="w-full px-3 py-2 rounded-lg text-sm">
+                        </div>
+                    </div>
+                    <button @click="addTimerPreset" class="btn-primary w-full py-2 rounded-lg text-sm">Add
+                        Timer</button>
                 </div>
-                <div class="flex gap-2">
-                  <select v-model="newTask.category" class="px-3 py-2.5 rounded-xl text-sm">
-                    <option value="study">Study</option>
-                    <option value="assignment">Assignment</option>
-                    <option value="exam">Exam</option>
-                    <option value="project">Project</option>
-                    <option value="other">Other</option>
-                  </select>
-                  <select v-model="newTask.priority" class="px-3 py-2.5 rounded-xl text-sm">
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
-                  <button @click="addTask" class="btn-primary px-4 py-2.5 rounded-xl">Add</button>
+
+                <!-- Timer List -->
+                <div class="space-y-2 max-h-64 overflow-y-auto">
+                    <div v-for="preset in timerPresets" :key="preset.id"
+                        class="flex items-center justify-between p-3 bg-[--bg-secondary] rounded-xl">
+                        <div>
+                            <p class="font-medium text-sm">{{ preset.label }}</p>
+                            <p class="text-xs text-[--fg-muted]">{{ preset.minutes }} minutes</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span v-if="preset.id === activeTimerId"
+                                class="text-xs text-[--accent] font-medium">Active</span>
+                            <button v-if="!preset.isDefault" @click="deleteTimerPreset(preset.id)"
+                                class="p-1.5 rounded-lg hover:bg-[--danger]/10 transition-colors"
+                                aria-label="Delete timer">
+                                <svg class="w-4 h-4 text-[--danger]" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
-            
-            <!-- Filters -->
-            <div class="flex gap-2 animate-fade-in-up" style="animation-delay: 0.05s;">
-              <button @click="filter = 'all'" class="px-3 py-1.5 rounded-lg text-sm transition-all" :class="filter === 'all' ? 'bg-[--accent] text-[--bg-primary]' : 'btn-ghost'">All</button>
-              <button @click="filter = 'active'" class="px-3 py-1.5 rounded-lg text-sm transition-all" :class="filter === 'active' ? 'bg-[--accent] text-[--bg-primary]' : 'btn-ghost'">Active</button>
-              <button @click="filter = 'completed'" class="px-3 py-1.5 rounded-lg text-sm transition-all" :class="filter === 'completed' ? 'bg-[--accent] text-[--bg-primary]' : 'btn-ghost'">Completed</button>
-              
-              <div class="flex-1"></div>
-              
-              <button v-if="completedCount > 0" @click="clearCompleted" class="text-sm text-[--fg-muted] hover:text-[--danger]">
-                Clear completed
-              </button>
-            </div>
-            
-            <!-- Task list -->
-            <div class="space-y-2 stagger-children">
-              <div 
-                v-for="task in filteredTasks" 
-                :key="task.id"
-                class="group stat-card rounded-xl p-3 flex items-center gap-3 transition-all hover:border-[--fg-muted]"
-                :class="task.completed ? 'opacity-60' : ''"
-              >
-                <input 
-                  type="checkbox"
-                  :checked="task.completed"
-                  @change="toggleTask(task.id)"
-                  class="task-check"
-                >
-                
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm" :class="task.completed ? 'line-through text-[--fg-muted]' : ''">
-                    {{ task.title }}
-                  </p>
-                  <div class="flex items-center gap-2 mt-1">
-                    <span class="tag tag-{{ task.category }}">{{ task.category }}</span>
-                    <span v-if="task.priority === 'high'" class="text-xs text-[--danger]">High priority</span>
-                  </div>
+
+                <div class="flex justify-end mt-5">
+                    <button @click="showTimerModal = false" class="btn-primary px-5 py-2 rounded-xl">Done</button>
                 </div>
-                
-                <button @click="deleteTask(task.id)" class="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-[--danger]/10 transition-all">
-                  <svg class="w-4 h-4 text-[--danger]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
-                </button>
-              </div>
-              
-              <div v-if="filteredTasks.length === 0" class="text-center py-8 text-[--fg-muted]">
-                No tasks found
-              </div>
             </div>
-          </div>
         </div>
-      </div>
-    </main>
-    
-    <!-- Add/Edit Routine Modal -->
-    <div v-if="showRoutineModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="modal-backdrop absolute inset-0" @click="showRoutineModal = false"></div>
-      <div class="relative bg-[--bg-card] rounded-2xl p-6 w-full max-w-md border border-[--border] animate-scale-in">
-        <h3 class="text-lg font-semibold mb-5">{{ editingRoutine.id ? 'Edit Routine' : 'Add New Routine' }}</h3>
-        
-        <div class="space-y-4">
-          <div>
-            <label class="text-xs text-[--fg-secondary] mb-1.5 block">Title</label>
-            <input v-model="editingRoutine.title" type="text" placeholder="e.g., Math Class" class="w-full px-4 py-2.5 rounded-xl text-sm">
-          </div>
-          
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-xs text-[--fg-secondary] mb-1.5 block">Start Time</label>
-              <input v-model="editingRoutine.startTime" type="time" class="w-full px-4 py-2.5 rounded-xl text-sm">
-            </div>
-            <div>
-              <label class="text-xs text-[--fg-secondary] mb-1.5 block">End Time</label>
-              <input v-model="editingRoutine.endTime" type="time" class="w-full px-4 py-2.5 rounded-xl text-sm">
-            </div>
-          </div>
-          
-          <div>
-            <label class="text-xs text-[--fg-secondary] mb-1.5 block">Type</label>
-            <select v-model="editingRoutine.type" class="w-full px-4 py-2.5 rounded-xl text-sm">
-              <option value="class">Class</option>
-              <option value="study">Study Session</option>
-              <option value="break">Break</option>
-              <option value="exercise">Exercise</option>
-              <option value="meal">Meal</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          
-          <div>
-            <label class="text-xs text-[--fg-secondary] mb-1.5 block">Location (optional)</label>
-            <input v-model="editingRoutine.location" type="text" placeholder="e.g., Room 301" class="w-full px-4 py-2.5 rounded-xl text-sm">
-          </div>
-          
-          <div>
-            <label class="text-xs text-[--fg-secondary] mb-2 block">Repeat on</label>
-            <div class="flex gap-2">
-              <button 
-                v-for="(day, index) in weekDays" 
-                :key="index"
-                @click="toggleRoutineDay(index)"
-                class="day-btn text-xs"
-                :class="{ 'active': editingRoutine.days.includes(index) }"
-              >
-                {{ day.short }}
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div class="flex justify-end gap-3 mt-6">
-          <button @click="closeRoutineModal" class="btn-ghost px-4 py-2 rounded-xl">Cancel</button>
-          <button @click="saveRoutine" class="btn-primary px-5 py-2 rounded-xl">Save Routine</button>
-        </div>
-      </div>
     </div>
-  </div>
 </body>
 <script src="script.js"></script>
+
 </html>

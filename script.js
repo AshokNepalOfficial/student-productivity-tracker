@@ -1,3 +1,4 @@
+
 const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
 
 createApp({
@@ -5,24 +6,32 @@ createApp({
     // State
     const tasks = ref([]);
     const routines = ref([]);
+    const timerPresets = ref([
+        { id: 1, label: 'Pomodoro', minutes: 25, isDefault: true },
+        { id: 2, label: 'Short Break', minutes: 5, isDefault: true },
+        { id: 3, label: 'Long Break', minutes: 15, isDefault: true },
+        { id: 4, label: 'Deep Work', minutes: 50, isDefault: true }
+    ]);
+    const activeTimerId = ref(1);
     const newTask = ref({ title: '', category: 'study', priority: 'medium' });
     const filter = ref('all');
     const activeTab = ref('schedule');
     const selectedDay = ref(new Date().getDay());
     const showRoutineModal = ref(false);
+    const showTimerModal = ref(false);
+    const showAddTimerForm = ref(false);
     const editingRoutine = ref({ days: [] });
+    const newTimerPreset = ref({ label: '', minutes: 25 });
     const streak = ref(0);
     const lastActiveDate = ref('');
     
     // Timer
-    const timerDuration = ref(25 * 60);
-    const timerRemaining = ref(25 * 60);
     const timerRunning = ref(false);
+    const timerRemaining = ref(25 * 60);
     let timerInterval = null;
     
     // Clock
     const currentTime = ref('');
-    const currentMinute = ref(0);
     let clockInterval = null;
     
     // Week days
@@ -41,13 +50,23 @@ createApp({
         try {
         const savedTasks = localStorage.getItem('focusflow_tasks');
         const savedRoutines = localStorage.getItem('focusflow_routines');
+        const savedPresets = localStorage.getItem('focusflow_timerPresets');
+        const savedActiveTimer = localStorage.getItem('focusflow_activeTimer');
         const savedStreak = localStorage.getItem('focusflow_streak');
         const savedLastActive = localStorage.getItem('focusflow_lastActive');
         
         if (savedTasks) tasks.value = JSON.parse(savedTasks);
         if (savedRoutines) routines.value = JSON.parse(savedRoutines);
+        if (savedPresets) timerPresets.value = JSON.parse(savedPresets);
+        if (savedActiveTimer) activeTimerId.value = parseInt(savedActiveTimer);
         if (savedStreak) streak.value = parseInt(savedStreak);
         if (savedLastActive) lastActiveDate.value = savedLastActive;
+        
+        // Set initial timer based on saved preset
+        const activePreset = timerPresets.value.find(p => p.id === activeTimerId.value);
+        if (activePreset) {
+            timerRemaining.value = activePreset.minutes * 60;
+        }
         } catch (e) {
         console.error('Storage load error:', e);
         }
@@ -58,6 +77,8 @@ createApp({
         try {
         localStorage.setItem('focusflow_tasks', JSON.stringify(tasks.value));
         localStorage.setItem('focusflow_routines', JSON.stringify(routines.value));
+        localStorage.setItem('focusflow_timerPresets', JSON.stringify(timerPresets.value));
+        localStorage.setItem('focusflow_activeTimer', activeTimerId.value.toString());
         localStorage.setItem('focusflow_streak', streak.value.toString());
         localStorage.setItem('focusflow_lastActive', lastActiveDate.value);
         } catch (e) {
@@ -68,34 +89,24 @@ createApp({
     // Update clock
     const updateClock = () => {
         const now = new Date();
-        currentTime.value = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        currentMinute.value = now.getHours() * 60 + now.getMinutes();
+        currentTime.value = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
     };
     
     // Computed
-    const currentDate = computed(() => {
-        return new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    });
-    
+    const currentDate = computed(() => new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
     const currentDayIndex = computed(() => new Date().getDay());
-    
     const todayString = new Date().toDateString();
     
     const totalToday = computed(() => tasks.value.filter(t => new Date(t.createdAt).toDateString() === todayString).length);
-    
     const completedToday = computed(() => tasks.value.filter(t => t.completed && t.completedAt && new Date(t.completedAt).toDateString() === todayString).length);
-    
     const progressPercent = computed(() => totalToday.value === 0 ? 0 : Math.round((completedToday.value / totalToday.value) * 100));
-    
     const activeTasks = computed(() => tasks.value.filter(t => !t.completed).length);
-    
     const completedCount = computed(() => tasks.value.filter(t => t.completed).length);
     
     const filteredTasks = computed(() => {
         let result = [...tasks.value];
         if (filter.value === 'active') result = result.filter(t => !t.completed);
         else if (filter.value === 'completed') result = result.filter(t => t.completed);
-        
         const priorityOrder = { high: 0, medium: 1, low: 2 };
         return result.sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
@@ -103,22 +114,15 @@ createApp({
         });
     });
     
-    // Routines computed
     const dayRoutines = computed(() => {
-        return routines.value
-        .filter(r => r.days.includes(selectedDay.value))
-        .sort((a, b) => a.startTime.localeCompare(b.startTime));
+        return routines.value.filter(r => r.days.includes(selectedDay.value)).sort((a, b) => a.startTime.localeCompare(b.startTime));
     });
     
     const currentActivity = computed(() => {
         if (routines.value.length === 0) return null;
         const today = new Date().getDay();
         const now = currentTime.value;
-        
-        return routines.value.find(r => {
-        if (!r.days.includes(today)) return false;
-        return now >= r.startTime && now <= r.endTime;
-        });
+        return routines.value.find(r => r.days.includes(today) && now >= r.startTime && now <= r.endTime);
     });
     
     const timeRemaining = computed(() => {
@@ -134,7 +138,6 @@ createApp({
     });
     
     const totalRoutine = computed(() => dayRoutines.value.length);
-    
     const completedRoutine = computed(() => {
         const now = new Date();
         const nowMins = now.getHours() * 60 + now.getMinutes();
@@ -143,10 +146,14 @@ createApp({
         return parseInt(end[0]) * 60 + parseInt(end[1]) < nowMins;
         }).length;
     });
-    
     const routineProgress = computed(() => totalRoutine.value === 0 ? 0 : Math.round((completedRoutine.value / totalRoutine.value) * 100));
     
     // Timer computed
+    const activeTimerLabel = computed(() => {
+        const preset = timerPresets.value.find(p => p.id === activeTimerId.value);
+        return preset ? preset.label : 'Timer';
+    });
+    
     const timerDisplay = computed(() => {
         const mins = Math.floor(Math.max(0, timerRemaining.value) / 60);
         const secs = Math.max(0, timerRemaining.value) % 60;
@@ -154,8 +161,10 @@ createApp({
     });
     
     const timerProgress = computed(() => {
+        const preset = timerPresets.value.find(p => p.id === activeTimerId.value);
+        const totalSeconds = preset ? preset.minutes * 60 : 25 * 60;
         const maxOffset = 352;
-        const progress = Math.max(0, timerRemaining.value) / Math.max(1, timerDuration.value);
+        const progress = Math.max(0, timerRemaining.value) / Math.max(1, totalSeconds);
         return maxOffset * (1 - progress);
     });
     
@@ -198,10 +207,8 @@ createApp({
     const updateStreak = () => {
         const today = new Date().toDateString();
         const yesterday = new Date(Date.now() - 86400000).toDateString();
-        
         if (lastActiveDate.value === yesterday) streak.value++;
         else if (lastActiveDate.value !== today) streak.value = 1;
-        
         lastActiveDate.value = today;
         saveToStorage();
     };
@@ -209,27 +216,20 @@ createApp({
     // Routine methods
     const toggleRoutineDay = (dayIndex) => {
         const idx = editingRoutine.value.days.indexOf(dayIndex);
-        if (idx === -1) {
-        editingRoutine.value.days.push(dayIndex);
-        } else {
-        editingRoutine.value.days.splice(idx, 1);
-        }
+        if (idx === -1) editingRoutine.value.days.push(dayIndex);
+        else editingRoutine.value.days.splice(idx, 1);
     };
     
     const saveRoutine = () => {
         if (!editingRoutine.value.title || !editingRoutine.value.startTime || !editingRoutine.value.endTime) return;
-        
         if (editingRoutine.value.id) {
         const idx = routines.value.findIndex(r => r.id === editingRoutine.value.id);
         if (idx !== -1) routines.value[idx] = { ...editingRoutine.value };
         } else {
-        routines.value.push({
-            ...editingRoutine.value,
-            id: Date.now()
-        });
+        routines.value.push({ ...editingRoutine.value, id: Date.now() });
         }
-        
-        closeRoutineModal();
+        showRoutineModal = false;
+        editingRoutine.value = { days: [] };
         saveToStorage();
     };
     
@@ -243,21 +243,14 @@ createApp({
         saveToStorage();
     };
     
-    const closeRoutineModal = () => {
-        showRoutineModal.value = false;
-        editingRoutine.value = { days: [] };
-    };
-    
     const isRoutineCurrent = (routine) => {
         if (selectedDay.value !== currentDayIndex.value) return false;
-        const now = currentTime.value;
-        return now >= routine.startTime && now <= routine.endTime;
+        return currentTime.value >= routine.startTime && currentTime.value <= routine.endTime;
     };
     
     const isRoutineCompleted = (routine) => {
         if (selectedDay.value !== currentDayIndex.value) return false;
-        const now = currentTime.value;
-        return now > routine.endTime;
+        return currentTime.value > routine.endTime;
     };
     
     const calculateDuration = (start, end) => {
@@ -269,6 +262,17 @@ createApp({
     };
     
     // Timer methods
+    const selectTimerPreset = (preset) => {
+        // Stop current timer if running
+        if (timerRunning.value) {
+        clearInterval(timerInterval);
+        timerRunning.value = false;
+        }
+        activeTimerId.value = preset.id;
+        timerRemaining.value = preset.minutes * 60;
+        saveToStorage();
+    };
+    
     const toggleTimer = () => {
         if (timerRunning.value) {
         clearInterval(timerInterval);
@@ -281,7 +285,9 @@ createApp({
             } else {
             clearInterval(timerInterval);
             timerRunning.value = false;
-            timerRemaining.value = timerDuration.value;
+            // Reset to full duration
+            const preset = timerPresets.value.find(p => p.id === activeTimerId.value);
+            if (preset) timerRemaining.value = preset.minutes * 60;
             }
         }, 1000);
         }
@@ -290,11 +296,32 @@ createApp({
     const resetTimer = () => {
         clearInterval(timerInterval);
         timerRunning.value = false;
-        timerRemaining.value = timerDuration.value;
+        const preset = timerPresets.value.find(p => p.id === activeTimerId.value);
+        if (preset) timerRemaining.value = preset.minutes * 60;
+    };
+    
+    const addTimerPreset = () => {
+        if (!newTimerPreset.value.label || !newTimerPreset.value.minutes) return;
+        timerPresets.value.push({
+        id: Date.now(),
+        label: newTimerPreset.value.label,
+        minutes: Math.min(180, Math.max(1, newTimerPreset.value.minutes)),
+        isDefault: false
+        });
+        newTimerPreset.value = { label: '', minutes: 25 };
+        showAddTimerForm.value = false;
+        saveToStorage();
+    };
+    
+    const deleteTimerPreset = (id) => {
+        // Don't delete if it's the active timer
+        if (activeTimerId.value === id) return;
+        timerPresets.value = timerPresets.value.filter(p => p.id !== id);
+        saveToStorage();
     };
     
     // Watch
-    watch([tasks, routines], saveToStorage, { deep: true });
+    watch([tasks, routines, timerPresets], saveToStorage, { deep: true });
     
     // Lifecycle
     onMounted(() => {
@@ -303,9 +330,7 @@ createApp({
         clockInterval = setInterval(updateClock, 1000);
         
         const today = new Date().toDateString();
-        if (lastActiveDate.value !== today) {
-        updateStreak();
-        }
+        if (lastActiveDate.value !== today) updateStreak();
     });
     
     onUnmounted(() => {
@@ -314,15 +339,16 @@ createApp({
     });
     
     return {
-        tasks, routines, newTask, filter, activeTab, selectedDay, showRoutineModal, editingRoutine,
-        streak, currentTime, currentMinute, weekDays, timerDuration, timerRemaining, timerRunning,
+        tasks, routines, timerPresets, activeTimerId, newTask, filter, activeTab, selectedDay,
+        showRoutineModal, showTimerModal, showAddTimerForm, editingRoutine, newTimerPreset,
+        streak, currentTime, weekDays, timerRunning, timerRemaining,
         currentDate, currentDayIndex, totalToday, completedToday, progressPercent, activeTasks,
         completedCount, filteredTasks, dayRoutines, currentActivity, timeRemaining, totalRoutine,
-        completedRoutine, routineProgress, timerDisplay, timerProgress,
+        completedRoutine, routineProgress, timerDisplay, timerProgress, activeTimerLabel,
         addTask, toggleTask, deleteTask, clearCompleted,
-        toggleRoutineDay, saveRoutine, editRoutine, deleteRoutine, closeRoutineModal,
+        toggleRoutineDay, saveRoutine, editRoutine, deleteRoutine,
         isRoutineCurrent, isRoutineCompleted, calculateDuration,
-        toggleTimer, resetTimer
+        selectTimerPreset, toggleTimer, resetTimer, addTimerPreset, deleteTimerPreset
     };
     }
 }).mount('#app');
