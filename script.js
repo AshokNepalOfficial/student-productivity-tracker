@@ -1,21 +1,21 @@
-function addTask() {
-  const input = document.getElementById("taskInput");
-  const task = input.value;
+const { createApp } = Vue;
 
-  if (task === "") return;
+createApp({
+  data() {
+    return {
+      newTask: "",
+      tasks: []
+    };
+  },
+  methods: {
+    addTask() {
+      if (this.newTask.trim() === "") return;
 
-  const li = document.createElement("li");
-  li.className = "flex justify-between items-center bg-gray-100 p-2 rounded-lg";
-
-  li.innerHTML = `
-    <span>${task}</span>
-    <button onclick="this.parentElement.remove()" 
-      class="text-red-500 hover:text-red-700">
-      Remove
-    </button>
-  `;
-
-  document.getElementById("taskList").appendChild(li);
-
-  input.value = "";
-}
+      this.tasks.push(this.newTask);
+      this.newTask = "";
+    },
+    removeTask(index) {
+      this.tasks.splice(index, 1);
+    }
+  }
+}).mount("#app");
